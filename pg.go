@@ -338,3 +338,7 @@ func (ar *AssRow) GetFloat(column string) float64 {
 	val, _ := strconv.ParseFloat(str, 64)
 	return val
 }
+
+func Quote(str string) string {
+	return pq.QuoteLiteral(str)
+}
