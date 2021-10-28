@@ -9,8 +9,8 @@ import (
 )
 
 func TestCreateTable(t *testing.T) {
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
 	jsonFile, err := os.Open("test_table.json")
 	if err != nil {
@@ -20,25 +20,37 @@ func TestCreateTable(t *testing.T) {
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	var data Table
-	json.Unmarshal([]byte(byteValue), &data)
+	var jsonSource TableInfo
+	json.Unmarshal([]byte(byteValue), &jsonSource)
 
-	CreateTable(data)
+	err = db.CreateTable(jsonSource)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
-	tbl := GetSchema(data.Name)
-	if len(tbl.Columns) == 0 {
+	sch, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	if len(sch.Columns) == 0 {
 		t.Errorf("Create table failed")
 	}
 }
 
 func TestAddColumn(t *testing.T) {
 
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
-	old := GetSchema("test")
-	AddColumn("test", "addcolumn", "integer")
-	new := GetSchema("test")
+	old, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	db.Table("test").AddColumn("addcolumn", "integer")
+	new, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	if len(old.Columns) == len(new.Columns) {
 		t.Errorf("Column already exist")
@@ -47,20 +59,26 @@ func TestAddColumn(t *testing.T) {
 
 func TestInsert(t *testing.T) {
 
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
 	vl := make(AssRow)
 	vl["name"] = "toto"
 	vl["description"] = "tata"
 
-	old := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	old, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringOld, _ := json.Marshal(old)
 	fmt.Println(string(jsonStringOld))
 
-	UpdateOrInsert("test", vl)
+	db.Table("test").UpdateOrInsert(vl)
 
-	new := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	new, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringNew, _ := json.Marshal(new)
 	fmt.Println(string(jsonStringNew))
 
@@ -71,21 +89,27 @@ func TestInsert(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
 	vl := make(AssRow)
 	vl["id"] = 1
 	vl["name"] = "titi"
 	vl["description"] = "toto"
 
-	old := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	old, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringOld, _ := json.Marshal(old)
 	fmt.Println(string(jsonStringOld))
 
-	UpdateOrInsert("test", vl)
+	db.Table("test").UpdateOrInsert(vl)
 
-	new := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	new, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringNew, _ := json.Marshal(new)
 	fmt.Println(string(jsonStringNew))
 
@@ -97,19 +121,25 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
 	vl := make(AssRow)
 	vl["id"] = 1
 
-	old := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	old, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringOld, _ := json.Marshal(old)
 	fmt.Println(string(jsonStringOld))
 
-	Delete("test", vl)
+	db.Table("test").Delete(vl)
 
-	new := GetAssociativeArray("test", []string{"*"}, "", []string{}, "")
+	new, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	jsonStringNew, _ := json.Marshal(new)
 	fmt.Println(string(jsonStringNew))
 
@@ -120,12 +150,18 @@ func TestDelete(t *testing.T) {
 
 func TestDeleteColumn(t *testing.T) {
 
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
-	old := GetSchema("test")
-	DeleteColumn("test", "addcolumn")
-	new := GetSchema("test")
+	old, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	db.Table("test").DeleteColumn("addcolumn")
+	new, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	if len(old.Columns) == len(new.Columns) {
 		t.Errorf("Error column not deleted")
@@ -133,13 +169,15 @@ func TestDeleteColumn(t *testing.T) {
 }
 
 func TestDeleteTable(t *testing.T) {
-	Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
-	defer Close()
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
 
-	DeleteTable("test")
+	db.Table("test").DeleteTable()
 
-	tbl := GetSchema("test")
-
+	tbl, err := db.Table("test").GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	if len(tbl.Columns) != 0 {
 		t.Errorf("Delete table failed")
 	}
