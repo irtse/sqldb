@@ -1,0 +1,17 @@
+{
+    "name":"test",
+    "columns":
+        {
+            "id":"integer",
+            "name":"varchar(255)",
+            "description":"varchar(1000)",
+            "startdate":"timestamp",
+            "enddate":"timestamp",
+            "latitude":"float",
+            "longitude":"float",
+            "intvalue":"integer",
+            "floatvalue":"float",
+            "price":"money",
+            "testtype_id":"integer"
+        }
+}
