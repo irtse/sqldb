@@ -321,3 +321,20 @@ func removeLastChar(s string) string {
 	r := []rune(s)
 	return string(r[:len(r)-1])
 }
+
+func (ar *AssRow) GetString(column string) string {
+	str := fmt.Sprintf("%v", (*ar)[column])
+	return str
+}
+
+func (ar *AssRow) GetInt(column string) int {
+	str := fmt.Sprintf("%v", (*ar)[column])
+	val, _ := strconv.Atoi(str)
+	return val
+}
+
+func (ar *AssRow) GetFloat(column string) float64 {
+	str := fmt.Sprintf("%v", (*ar)[column])
+	val, _ := strconv.ParseFloat(str, 64)
+	return val
+}
