@@ -108,14 +108,14 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	var ti TableInfo
 	ti.Name = t.Name
 	ti.db = t.db
-	cols, err := t.db.QueryAssociativeArray("SELECT column_name :: varchar as name, REPLACE(REPLACE(data_type,'character varying','varchar'),'character','char') || COALESCE('(' || character_maximum_length || ')', '') as type from INFORMATION_SCHEMA.COLUMNS where table_name ='" + t.Name + "';")
+	cols, err := t.db.QueryAssociativeArray("SELECT column_name :: varchar as name, REPLACE(REPLACE(data_type,'character varying','varchar'),'character','char') || COALESCE('(' || character_maximum_length || ')', '') as type, col_description('public." + t.Name + "'::regclass, ordinal_position) as comment  from INFORMATION_SCHEMA.COLUMNS where table_name ='" + t.Name + "';")
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	ti.Columns = make(map[string]string)
 	for _, row := range cols {
-		var name, rowtype string
+		var name, rowtype, comment string
 		for key, element := range row {
 			if key == "name" {
 				name = fmt.Sprintf("%v", element)
@@ -123,8 +123,14 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 			if key == "type" {
 				rowtype = fmt.Sprintf("%v", element)
 			}
+			if key == "comment" {
+				comment = fmt.Sprintf("%v", element)
+			}
 		}
 		ti.Columns[name] = rowtype
+		if comment != "<nil>" && strings.TrimSpace(comment) != "" {
+			ti.Columns[name] = ti.Columns[name] + "|" + comment
+		}
 	}
 	return &ti, nil
 }
@@ -141,8 +147,8 @@ func (db *Db) CreateTable(t TableInfo) error {
 		if fmt.Sprintf("%v", name) == "id" {
 			columns += fmt.Sprintf("%v", name) + " " + "SERIAL PRIMARY KEY,"
 		} else {
-
-			columns += fmt.Sprintf("%v", name) + " " + fmt.Sprintf("%v", rowtype)
+			desc := strings.Split(fmt.Sprintf("%v", rowtype), "|")
+			columns += fmt.Sprintf("%v", name) + " " + desc[0]
 			columns += ","
 		}
 	}
@@ -152,6 +158,18 @@ func (db *Db) CreateTable(t TableInfo) error {
 	if err != nil {
 		log.Println(err.Error())
 		return err
+	}
+	for name, rowtype := range t.Columns {
+		desc := strings.Split(fmt.Sprintf("%v", rowtype), "|")
+		if len(desc) > 1 {
+			query = "COMMENT ON COLUMN " + t.Name + "." + fmt.Sprintf("%v", name) + " IS '" + desc[1] + "'"
+			_, err := t.db.conn.Query(query)
+			if err != nil {
+				log.Println(err.Error())
+				return err
+			}
+		}
+
 	}
 	return nil
 }
@@ -172,12 +190,20 @@ func (t *TableInfo) DeleteTable() error {
 	return nil
 }
 
-func (t *TableInfo) AddColumn(name string, sqltype string) error {
+func (t *TableInfo) AddColumn(name string, sqltype string, comment string) error {
 	query := "alter table " + t.Name + " add " + name + " " + sqltype
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
 		log.Println(err)
 		return err
+	}
+	if strings.TrimSpace(comment) != "" {
+		query = "COMMENT ON COLUMN " + t.Name + "." + name + " IS '" + comment + "'"
+		_, err = t.db.conn.Query(query)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
 	}
 	defer rows.Close()
 	return nil

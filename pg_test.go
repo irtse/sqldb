@@ -46,7 +46,7 @@ func TestAddColumn(t *testing.T) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	db.Table("test").AddColumn("addcolumn", "integer")
+	db.Table("test").AddColumn("addcolumn", "integer", "comment")
 	new, err := db.Table("test").GetSchema()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -174,11 +174,4 @@ func TestDeleteTable(t *testing.T) {
 
 	db.Table("test").DeleteTable()
 
-	tbl, err := db.Table("test").GetSchema()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	if len(tbl.Columns) != 0 {
-		t.Errorf("Delete table failed")
-	}
 }

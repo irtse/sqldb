@@ -3,12 +3,12 @@
     "columns":
         {
             "id":"integer",
-            "name":"varchar(255)",
+            "name":"varchar(255)|comment",
             "description":"varchar(1000)",
             "startdate":"timestamp",
             "enddate":"timestamp",
-            "latitude":"float",
-            "longitude":"float",
+            "latitude":"float|map",
+            "longitude":"float|map",
             "intvalue":"integer",
             "floatvalue":"float",
             "price":"money",
