@@ -232,7 +232,7 @@ func (t *TableInfo) buildSelect(key string, columns []string, restriction string
 	if restriction != "" {
 		query += " where " + restriction
 	}
-	if len(sortkeys) > 0 {
+	if len(sortkeys) > 0 && len(sortkeys[0]) > 0 {
 		query += " order by " + strings.Join(sortkeys, ",")
 	}
 	if len(dir) > 0 {
