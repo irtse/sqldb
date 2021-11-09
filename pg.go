@@ -136,7 +136,7 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 }
 
 func (db *Db) ListTables() (Rows, error) {
-	return db.QueryAssociativeArray("SELECT table_name :: varchar FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
+	return db.QueryAssociativeArray("SELECT table_name :: varchar as name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
 }
 
 func (db *Db) CreateTable(t TableInfo) error {
