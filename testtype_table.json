@@ -1,17 +1,10 @@
 {
     "name":"testtype",
-    "columns":[
+    "columns":
         {
-            "name":"id",
-            "type":"integer"
-        },
-        {
-            "name":"name",
-            "type":"varchar(255)"
-        },        
-        {
-            "name":"detail",
-            "type":"varchar(255)"
+            "id":"integer",
+            "name":"varchar(255)",
+            "detail":"varchar(255)"
         }
-       ]
+    
 }

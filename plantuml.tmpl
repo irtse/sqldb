@@ -1,0 +1,14 @@
+@startuml
+
+{{range .Tbl}}
+entity {{.Name}} {
+{{range $key, $value := .Columns}}  {{$key}} : {{$value}}
+{{end}}}
+{{end}}
+
+{{range .Lnk}}
+{{.Source}} ||..|| {{.Destination}}
+{{end}}
+
+@enduml
+

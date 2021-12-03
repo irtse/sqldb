@@ -2,8 +2,12 @@ package sqldb
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -27,6 +31,11 @@ type TableInfo struct {
 	Name    string            `json:"name"`
 	Columns map[string]string `json:"columns"`
 	db      *Db
+}
+
+type Link struct {
+	Source      string
+	Destination string
 }
 
 // Open the database
@@ -135,6 +144,30 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	return &ti, nil
 }
 
+func (db *Db) GetSchema() ([]TableInfo, error) {
+	var res []TableInfo
+	tables, err := db.ListTables()
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	for _, row := range tables {
+		for _, element := range row {
+			var ti TableInfo
+			var fullti *TableInfo
+			ti.Name = fmt.Sprintf("%v", element)
+			ti.db = db
+			fullti, err = ti.GetSchema()
+			if err != nil {
+				log.Println(err.Error())
+				return nil, err
+			}
+			res = append(res, *fullti)
+		}
+	}
+	return res, nil
+}
+
 func (db *Db) ListTables() (Rows, error) {
 	return db.QueryAssociativeArray("SELECT table_name :: varchar as name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
 }
@@ -218,6 +251,46 @@ func (t *TableInfo) DeleteColumn(name string) error {
 	}
 	defer rows.Close()
 	return nil
+}
+
+func (db *Db) ImportSchema(filename string) {
+	jsonFile, err := os.Open(filename)
+	if err != nil {
+		log.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var jsonSource []TableInfo
+	json.Unmarshal([]byte(byteValue), &jsonSource)
+	for _, ti := range jsonSource {
+		ti.db = db
+		err = db.CreateTable(ti)
+		if err != nil {
+			log.Println(err.Error())
+		}
+	}
+}
+
+func (db *Db) ClearImportSchema(filename string) {
+	jsonFile, err := os.Open(filename)
+	if err != nil {
+		log.Println(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var jsonSource []TableInfo
+	json.Unmarshal([]byte(byteValue), &jsonSource)
+	for _, ti := range jsonSource {
+		ti.db = db
+		err = ti.DeleteTable()
+		if err != nil {
+			log.Println(err.Error())
+		}
+	}
 }
 
 func (db *Db) ListSequences() (Rows, error) {
@@ -340,7 +413,6 @@ func (t *TableInfo) UpdateOrInsert(record AssRow) (int, error) {
 		t.Update(record)
 		return id, nil
 	}
-
 }
 
 func removeLastChar(s string) string {
@@ -367,4 +439,93 @@ func (ar *AssRow) GetFloat(column string) float64 {
 
 func Quote(str string) string {
 	return pq.QuoteLiteral(str)
+}
+
+func (db *Db) SaveSchema(generatedFilename string) error {
+	schema, err := db.GetSchema()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	file, _ := json.MarshalIndent(schema, "", " ")
+	_ = ioutil.WriteFile(generatedFilename, file, 0644)
+	return nil
+}
+
+func buildLinks(schema []TableInfo) []Link {
+	var links []Link
+	for _, ti := range schema {
+		fmt.Println(ti.Name)
+		for column, _ := range ti.Columns {
+			if strings.HasSuffix(column, "_id") {
+				tokens := strings.Split(column, "_")
+				linkedtable := tokens[len(tokens)-2]
+				var link Link
+				link.Source = ti.Name
+				link.Destination = linkedtable
+				links = append(links, link)
+			}
+		}
+	}
+	return links
+}
+
+func (db *Db) GenerateTemplate(templateFilename string, generatedFilename string) error {
+	schema, err := db.GetSchema()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	links := buildLinks(schema)
+	data := struct {
+		Tbl []TableInfo
+		Lnk []Link
+	}{
+		schema,
+		links,
+	}
+
+	t, err := template.ParseFiles(templateFilename)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	f, err := os.Create(generatedFilename)
+	if err != nil {
+		log.Println("create file: ", err)
+		return err
+	}
+	err = t.Execute(f, data)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (db *Db) GenerateTableTemplates(templateFilename string, outputFolder string, extension string) error {
+	schema, err := db.GetSchema()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	for _, ti := range schema {
+
+		t, err := template.ParseFiles(templateFilename)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		f, err := os.Create(outputFolder + string(os.PathSeparator) + ti.Name + "." + extension)
+		if err != nil {
+			log.Println("create file: ", err)
+			return err
+		}
+		err = t.Execute(f, ti)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+	}
+	return nil
 }

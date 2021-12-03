@@ -12,7 +12,7 @@ func TestCreateTable(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 
-	jsonFile, err := os.Open("test_table.json")
+	jsonFile, err := os.Open("testtype_table.json")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -171,7 +171,55 @@ func TestDeleteColumn(t *testing.T) {
 func TestDeleteTable(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
-
 	db.Table("test").DeleteTable()
 
+}
+
+func TestImportSchema(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	db.ImportSchema("pfn.json")
+}
+
+func TestClearImportSchema(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	db.ClearImportSchema("pfn.json")
+}
+
+func TestGetSchema(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	data, err := db.GetSchema()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	val, _ := json.Marshal(data)
+	fmt.Println(string(val))
+}
+
+func TestSaveSchema(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	err := db.SaveSchema("schema.json")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+func TestGenerateTemplate(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	err := db.GenerateTemplate("plantuml.tmpl", "schema.puml")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func TestGenerateTableTemplate(t *testing.T) {
+	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	defer db.Close()
+	err := db.GenerateTableTemplates("table.tmpl", "gen", "html")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
