@@ -447,6 +447,7 @@ func (db *Db) SaveSchema(generatedFilename string) error {
 		log.Println(err)
 		return err
 	}
+	//	file, _ := json.Marshal(schema)
 	file, _ := json.MarshalIndent(schema, "", " ")
 	_ = ioutil.WriteFile(generatedFilename, file, 0644)
 	return nil

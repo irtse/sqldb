@@ -61,6 +61,7 @@
                 "day":"date",
                 "morning_entity_id":"integer",
                 "afternoon_entity_id":"integer",
+                "person_id":"integer",
                 "comment":"varchar(255)"
             }        
     }

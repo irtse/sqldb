@@ -1,0 +1,156 @@
+[
+ {
+  "name": "computer",
+  "columns": {
+   "description": "varchar(1000)",
+   "id": "integer",
+   "name": "varchar(255)|comment",
+   "os": "varchar(255)"
+  }
+ },
+ {
+  "name": "dbentity",
+  "columns": {
+   "description": "text",
+   "id": "integer",
+   "parent_id": "bigint",
+   "type": "varchar(255)"
+  }
+ },
+ {
+  "name": "dbrole",
+  "columns": {
+   "description": "text",
+   "id": "integer",
+   "name": "varchar"
+  }
+ },
+ {
+  "name": "dbtableaccess",
+  "columns": {
+   "dbrole_id": "integer",
+   "id": "integer",
+   "tableaccess": "varchar(255)",
+   "userrolerestrictions": "varchar(255)"
+  }
+ },
+ {
+  "name": "dbuser",
+  "columns": {
+   "id": "integer",
+   "login": "varchar(255)|comment",
+   "password": "varchar(255)"
+  }
+ },
+ {
+  "name": "dbuserrole",
+  "columns": {
+   "dbentity_id": "integer",
+   "dbrole_id": "integer",
+   "dbuser_id": "integer",
+   "enddate": "timestamp without time zone",
+   "id": "integer",
+   "startdate": "timestamp without time zone"
+  }
+ },
+ {
+  "name": "entity",
+  "columns": {
+   "enddate": "date",
+   "id": "integer",
+   "name": "varchar(255)",
+   "startdate": "date",
+   "type": "varchar(255)"
+  }
+ },
+ {
+  "name": "person",
+  "columns": {
+   "email": "varchar(255)",
+   "firstname": "varchar(255)",
+   "id": "integer",
+   "mobile": "varchar(255)",
+   "name": "varchar(255)"
+  }
+ },
+ {
+  "name": "software",
+  "columns": {
+   "company": "varchar(255)",
+   "description": "varchar(1000)",
+   "id": "integer",
+   "licenseend": "date",
+   "name": "varchar(255)|comment",
+   "support": "varchar(255)"
+  }
+ },
+ {
+  "name": "software_computer",
+  "columns": {
+   "computer_id": "integer",
+   "id": "integer",
+   "software_id": "integer"
+  }
+ },
+ {
+  "name": "test",
+  "columns": {
+   "description": "varchar(1000)",
+   "enddate": "timestamp without time zone",
+   "floatvalue": "double precision",
+   "id": "integer",
+   "intvalue": "integer",
+   "latitude": "double precision|map",
+   "longitude": "double precision|map",
+   "name": "varchar(255)|comment",
+   "price": "money",
+   "startdate": "timestamp without time zone",
+   "testtype_id": "integer"
+  }
+ },
+ {
+  "name": "testtype",
+  "columns": {
+   "detail": "varchar(255)",
+   "id": "integer",
+   "name": "varchar(255)"
+  }
+ },
+ {
+  "name": "timetracking",
+  "columns": {
+   "afternoon_entity_id": "integer",
+   "comment": "varchar(255)",
+   "day": "date",
+   "id": "integer",
+   "morning_entity_id": "integer"
+  }
+ },
+ {
+    "name": "surveyquestion",
+    "columns": {
+     "type": "integer",
+     "label": "varchar(1000)",
+     "responses": "varchar(1000)",
+     "id": "integer",
+     "votes": "integer"
+    }
+   },
+   {
+    "name": "surveyresponse",
+    "columns": {
+     "surveyuser_id": "integer",
+     "surveyquestion_id": "varchar(255)",
+     "response": "varchar(1000)",
+     "id": "integer"
+    }
+   },
+   {
+    "name": "surveyuser",
+    "columns": {
+     "voted": "bool",
+     "code": "varchar(255)",
+     "id": "integer"
+    }
+   }
+]
