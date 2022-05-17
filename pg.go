@@ -325,15 +325,8 @@ func (t *TableInfo) Insert(record AssRow) (int, error) {
 	var id int
 
 	for key, element := range record {
-
-		if strings.Contains(t.Columns[key], "char") || strings.Contains(t.Columns[key], "date") {
-			columns += key + ","
-			values += fmt.Sprint(pq.QuoteLiteral(fmt.Sprintf("%v", element))) + ","
-		} else {
-
-			columns += key + ","
-			values += fmt.Sprintf("%v", element) + ","
-		}
+		columns += key + ","
+		values += FormatForSQL(t.Columns[key], element) + ","
 	}
 
 	t.db.conn.QueryRow("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id").Scan(&id)
@@ -352,18 +345,12 @@ func (t *TableInfo) Update(record AssRow) error {
 
 	for key, element := range record {
 
-		if strings.Contains(t.Columns[key], "char") || strings.Contains(t.Columns[key], "date") {
-
-			stack = stack + " " + key + " = " + pq.QuoteLiteral(fmt.Sprintf("%v", element)) + ","
-
+		if key == "id" {
+			id = fmt.Sprintf("%v", element)
 		} else {
-
-			if key == "id" {
-				id = fmt.Sprintf("%v", element)
-			} else {
-				stack = stack + " " + key + " = " + fmt.Sprintf("%v", element) + ","
-			}
+			stack = stack + " " + key + " = " + FormatForSQL(t.Columns[key], element) + ","
 		}
+
 	}
 	stack = removeLastChar(stack)
 	query := ("UPDATE " + t.Name + " SET " + stack + " WHERE id = " + id)
@@ -529,4 +516,16 @@ func (db *Db) GenerateTableTemplates(templateFilename string, outputFolder strin
 		}
 	}
 	return nil
+}
+
+func FormatForSQL(datatype string, value interface{}) string {
+	strval := fmt.Sprintf("%v", value)
+	if !strings.Contains(datatype, "char") && len(strval) == 0 {
+		return "NULL"
+	}
+	if strings.Contains(datatype, "char") || strings.Contains(datatype, "date") {
+		return fmt.Sprint(pq.QuoteLiteral(strval))
+	}
+	return fmt.Sprint(strval)
+
 }
