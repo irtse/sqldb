@@ -329,8 +329,8 @@ func (t *TableInfo) Insert(record AssRow) (int, error) {
 		values += FormatForSQL(t.Columns[key], element) + ","
 	}
 
-	t.db.conn.QueryRow("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id").Scan(&id)
-	return id, nil
+	err = t.db.conn.QueryRow("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id").Scan(&id)
+	return id, err
 }
 
 func (t *TableInfo) Update(record AssRow) error {
@@ -523,7 +523,7 @@ func FormatForSQL(datatype string, value interface{}) string {
 	if !strings.Contains(datatype, "char") && len(strval) == 0 {
 		return "NULL"
 	}
-	if strings.Contains(datatype, "char") || strings.Contains(datatype, "date") {
+	if strings.Contains(datatype, "char") || strings.Contains(datatype, "date") || strings.Contains(datatype, "timestamp") {
 		return fmt.Sprint(pq.QuoteLiteral(strval))
 	}
 	return fmt.Sprint(strval)

@@ -1,13 +1,6 @@
 @startuml
 
 
-entity computer {
-  description : varchar(1000)
-  id : integer
-  name : varchar(255)|comment
-  os : varchar(255)
-}
-
 entity dbentity {
   description : text
   id : integer
@@ -43,64 +36,10 @@ entity dbuserrole {
   startdate : timestamp without time zone
 }
 
-entity entity {
-  enddate : date
-  id : integer
-  name : varchar(255)
-  startdate : date
-  type : varchar(255)
-}
-
-entity person {
-  email : varchar(255)
-  firstname : varchar(255)
-  id : integer
-  mobile : varchar(255)
-  name : varchar(255)
-}
-
-entity software {
-  company : varchar(255)
-  description : varchar(1000)
-  id : integer
-  licenseend : date
-  name : varchar(255)|comment
-  support : varchar(255)
-}
-
-entity software_computer {
-  computer_id : integer
-  id : integer
-  software_id : integer
-}
-
-entity test {
-  description : varchar(1000)
-  enddate : timestamp without time zone
-  floatvalue : double precision
-  id : integer
-  intvalue : integer
-  latitude : double precision|map
-  longitude : double precision|map
-  name : varchar(255)|comment
-  price : money
-  startdate : timestamp without time zone
-  testtype_id : integer
-}
-
 entity testtype {
   detail : varchar(255)
   id : integer
   name : varchar(255)
-}
-
-entity timetracking {
-  afternoon_entity_id : integer
-  comment : varchar(255)
-  day : date
-  id : integer
-  morning_entity_id : integer
-  person_id : integer
 }
 
 
@@ -109,23 +48,11 @@ dbentity ||..|| parent
 
 dbtableaccess ||..|| dbrole
 
+dbuserrole ||..|| dbuser
+
 dbuserrole ||..|| dbentity
 
 dbuserrole ||..|| dbrole
-
-dbuserrole ||..|| dbuser
-
-software_computer ||..|| computer
-
-software_computer ||..|| software
-
-test ||..|| testtype
-
-timetracking ||..|| entity
-
-timetracking ||..|| person
-
-timetracking ||..|| entity
 
 
 @enduml
