@@ -85,6 +85,11 @@ func TestInsert(t *testing.T) {
 	if len(jsonStringOld) == len(jsonStringNew) {
 		t.Errorf("Error row not created")
 	}
+	jsonFile, err := os.Open("insert.json")
+	defer jsonFile.Close()
+	var result map[string]interface{}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &result)
 }
 
 func TestUpdate(t *testing.T) {

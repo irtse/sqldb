@@ -519,6 +519,9 @@ func (db *Db) GenerateTableTemplates(templateFilename string, outputFolder strin
 }
 
 func FormatForSQL(datatype string, value interface{}) string {
+	if value == nil {
+		return "NULL"
+	}
 	strval := fmt.Sprintf("%v", value)
 	if !strings.Contains(datatype, "char") && len(strval) == 0 {
 		return "NULL"
