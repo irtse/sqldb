@@ -527,5 +527,4 @@ func FormatForSQL(datatype string, value interface{}) string {
 		return fmt.Sprint(pq.QuoteLiteral(strval))
 	}
 	return fmt.Sprint(strval)
-
 }

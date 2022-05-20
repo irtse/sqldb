@@ -12,7 +12,7 @@ func TestCreateTable(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 
-	jsonFile, err := os.Open("testtype_table.json")
+	jsonFile, err := os.Open("test_table.json")
 	if err != nil {
 		fmt.Println(err)
 	}
