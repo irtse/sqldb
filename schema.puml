@@ -1,58 +1,7 @@
 @startuml
 
 
-entity dbentity {
-  description : text
-  id : integer
-  parent_id : bigint
-  type : varchar(255)
-}
 
-entity dbrole {
-  description : text
-  id : integer
-  name : varchar
-}
-
-entity dbtableaccess {
-  dbrole_id : integer
-  id : integer
-  tableaccess : varchar(255)
-  userrolerestrictions : varchar(255)
-}
-
-entity dbuser {
-  id : integer
-  login : varchar(255)|comment
-  password : varchar(255)
-}
-
-entity dbuserrole {
-  dbentity_id : integer
-  dbrole_id : integer
-  dbuser_id : integer
-  enddate : timestamp without time zone
-  id : integer
-  startdate : timestamp without time zone
-}
-
-entity testtype {
-  detail : varchar(255)
-  id : integer
-  name : varchar(255)
-}
-
-
-
-dbentity ||..|| parent
-
-dbtableaccess ||..|| dbrole
-
-dbuserrole ||..|| dbuser
-
-dbuserrole ||..|| dbentity
-
-dbuserrole ||..|| dbrole
 
 
 @enduml

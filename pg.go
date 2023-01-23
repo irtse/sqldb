@@ -78,7 +78,7 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 	}
 	defer rows.Close()
 
-	var results Rows
+	results := Rows{}
 	cols, err := rows.Columns()
 	if err != nil {
 		log.Println(err)
