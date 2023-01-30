@@ -372,7 +372,7 @@ func (t *TableInfo) Delete(record AssRow) error {
 		if key == "id" {
 			values += fmt.Sprintf("%v", element) + ","
 			id = removeLastChar(values)
-
+			break
 		}
 	}
 	query := ("DELETE FROM " + t.Name + " WHERE id = " + id)
@@ -392,6 +392,7 @@ func (t *TableInfo) UpdateOrInsert(record AssRow) (int, error) {
 		if key == "id" {
 			sid := fmt.Sprintf("%v", element)
 			id, _ = strconv.Atoi(sid)
+			break
 		}
 	}
 	if id == -1 {
