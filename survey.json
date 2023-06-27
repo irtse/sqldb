@@ -1,0 +1,58 @@
+[
+    {
+        "name": "survey",
+        "columns": {
+            "id": "integer",
+            "name": "varchar(255)",
+            "description": "varchar(1000)",
+            "start":"timestmp",
+            "stop":"timestmpestamp",
+            "published":"bool"
+        }
+    },  
+    {
+        "name": "surveyquestion",
+        "columns": {
+            "id": "integer",
+            "survey_id": "integer",
+            "question_id": "integer"
+        }
+    },   
+    {
+        "name": "chapter",
+        "columns": {
+            "id": "integer",
+            "name": "varchar(255)",
+            "order": "integer"
+        }
+    },      
+    {
+        "name": "question",
+        "columns": {
+            "name": "varchar(255)",
+            "text": "varchar(1000)",
+            "type": "varchar(255)",
+            "options": "varchar(1000)",
+            "id": "integer",
+            "order": "integer",
+            "chapter_id": "integer"
+        }
+    },
+    {
+        "name": "authuser",
+        "columns": {
+            "survey_id": "integer",
+            "code": "varchar(1000)",
+            "id": "integer"
+        }
+    },
+    {
+        "name": "answer",
+        "columns": {
+            "question_id": "integer",
+            "code_id": "integer",
+            "value":"integer",
+            "text": "varchar(2000)"
+        }
+    }
+]

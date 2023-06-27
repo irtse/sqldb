@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+
+  pg:
+    image: postgres:alpine
+    restart: always
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - 5432:5432
+
+  my:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MARIADB_ROOT_PASSWORD: root
+    ports: 
+      - 3306:3306
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

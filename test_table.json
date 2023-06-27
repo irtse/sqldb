@@ -11,7 +11,7 @@
             "longitude":"float|map",
             "intvalue":"integer",
             "floatvalue":"float",
-            "price":"money",
+            "price":"float",
             "testtype_id":"integer"
         }
 }

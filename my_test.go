@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func TestPgCreateTable(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+func TestMyCreateTable(t *testing.T) {
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test")
 	defer db.Close()
 
 	jsonFile, err := os.Open("test_table.json")
@@ -37,7 +37,7 @@ func TestPgCreateTable(t *testing.T) {
 	}
 }
 
-func TestPgAddColumn(t *testing.T) {
+func TestMyAddColumn(t *testing.T) {
 
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
@@ -57,7 +57,7 @@ func TestPgAddColumn(t *testing.T) {
 	}
 }
 
-func TestPgInsert(t *testing.T) {
+func TestMyInsert(t *testing.T) {
 
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
@@ -92,7 +92,7 @@ func TestPgInsert(t *testing.T) {
 	json.Unmarshal(byteValue, &result)
 }
 
-func TestPgUpdate(t *testing.T) {
+func TestMyUpdate(t *testing.T) {
 
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
@@ -124,7 +124,7 @@ func TestPgUpdate(t *testing.T) {
 
 }
 
-func TestPgDelete(t *testing.T) {
+func TestMyDelete(t *testing.T) {
 
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
@@ -153,7 +153,7 @@ func TestPgDelete(t *testing.T) {
 	}
 }
 
-func TestPgDeleteColumn(t *testing.T) {
+func TestMyDeleteColumn(t *testing.T) {
 
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
@@ -173,26 +173,26 @@ func TestPgDeleteColumn(t *testing.T) {
 	}
 }
 
-func TestPgDeleteTable(t *testing.T) {
+func TestMyDeleteTable(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	db.Table("test").DeleteTable()
 
 }
 
-func TestPgImportSchema(t *testing.T) {
+func TestMyImportSchema(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	db.ImportSchema("pfn.json")
 }
 
-func TestPgClearImportSchema(t *testing.T) {
+func TestMyClearImportSchema(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	db.ClearImportSchema("pfn.json")
 }
 
-func TestPgGetSchema(t *testing.T) {
+func TestMyGetSchema(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	data, err := db.GetSchema()
@@ -203,7 +203,7 @@ func TestPgGetSchema(t *testing.T) {
 	fmt.Println(string(val))
 }
 
-func TestPgSaveSchema(t *testing.T) {
+func TestMySaveSchema(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	err := db.SaveSchema("schema.json")
@@ -211,7 +211,7 @@ func TestPgSaveSchema(t *testing.T) {
 		fmt.Println(err.Error())
 	}
 }
-func TestPgGenerateTemplate(t *testing.T) {
+func TestMyGenerateTemplate(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	err := db.GenerateTemplate("plantuml.tmpl", "schema.puml")
@@ -220,7 +220,7 @@ func TestPgGenerateTemplate(t *testing.T) {
 	}
 }
 
-func TestPgGenerateTableTemplate(t *testing.T) {
+func TestMyGenerateTableTemplate(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 	err := db.GenerateTableTemplates("table.tmpl", "gen", "html")

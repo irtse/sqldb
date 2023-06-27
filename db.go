@@ -3,6 +3,7 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
 )
 
@@ -63,12 +65,12 @@ func (db *Db) Table(name string) *TableInfo {
 	return &ti
 }
 
-// GetAssociativeArray : Provide results as an associative array
+// GetAssociativeArray : Provide table data as an associative array
 func (t *TableInfo) GetAssociativeArray(columns []string, restriction string, sortkeys []string, dir string) ([]AssRow, error) {
 	return t.db.QueryAssociativeArray(t.buildSelect("", columns, restriction, sortkeys, dir))
 }
 
-// QueryAssociativeArray : Provide results as an associative array
+// QueryAssociativeArray : Provide query result as an associative array
 func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 	rows, err := db.conn.Query(query)
 	if err != nil {
@@ -112,12 +114,21 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 	return results, nil
 }
 
-// GetSchema : Provide results as an associative array
+// GetSchema : Provide table schema as an associative array
 func (t *TableInfo) GetSchema() (*TableInfo, error) {
+	pgSchema := "SELECT column_name :: varchar as name, REPLACE(REPLACE(data_type,'character varying','varchar'),'character','char') || COALESCE('(' || character_maximum_length || ')', '') as type, col_description('public." + t.Name + "'::regclass, ordinal_position) as comment  from INFORMATION_SCHEMA.COLUMNS where table_name ='" + t.Name + "';"
+	mySchema := "SELECT COLUMN_NAME as name, DATA_TYPE || CHARACTER_MAXIMUM_LENGTH	FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + t.Name + "';"
+	var schemaQuery string
 	var ti TableInfo
 	ti.Name = t.Name
 	ti.db = t.db
-	cols, err := t.db.QueryAssociativeArray("SELECT column_name :: varchar as name, REPLACE(REPLACE(data_type,'character varying','varchar'),'character','char') || COALESCE('(' || character_maximum_length || ')', '') as type, col_description('public." + t.Name + "'::regclass, ordinal_position) as comment  from INFORMATION_SCHEMA.COLUMNS where table_name ='" + t.Name + "';")
+	if t.db.Driver == "postgres" {
+		schemaQuery = pgSchema
+	}
+	if t.db.Driver == "mysql" {
+		schemaQuery = mySchema
+	}
+	cols, err := t.db.QueryAssociativeArray(schemaQuery)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -144,6 +155,7 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	return &ti, nil
 }
 
+// GetSchema : Provide full database schema as an associative array
 func (db *Db) GetSchema() ([]TableInfo, error) {
 	var res []TableInfo
 	tables, err := db.ListTables()
@@ -168,8 +180,23 @@ func (db *Db) GetSchema() ([]TableInfo, error) {
 	return res, nil
 }
 
+// GetSchema : Provide database tables list
 func (db *Db) ListTables() (Rows, error) {
+	if db.Driver == "postgres" {
+		return db.pgListTables()
+	}
+	if db.Driver == "mysql" {
+		return db.myListTables()
+	}
+	return nil, errors.New("no driver")
+}
+
+func (db *Db) pgListTables() (Rows, error) {
 	return db.QueryAssociativeArray("SELECT table_name :: varchar as name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;")
+}
+
+func (db *Db) myListTables() (Rows, error) {
+	return db.QueryAssociativeArray("SELECT TABLE_NAME as name FROM information_schema.TABLES WHERE TABLE_TYPE LIKE 'BASE_TABLE';")
 }
 
 func (db *Db) CreateTable(t TableInfo) error {
