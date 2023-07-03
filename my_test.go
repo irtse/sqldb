@@ -9,7 +9,7 @@ import (
 )
 
 func TestMyCreateTable(t *testing.T) {
-	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	jsonFile, err := os.Open("test_table.json")
@@ -39,7 +39,7 @@ func TestMyCreateTable(t *testing.T) {
 
 func TestMyAddColumn(t *testing.T) {
 
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	old, err := db.Table("test").GetSchema()
@@ -59,12 +59,15 @@ func TestMyAddColumn(t *testing.T) {
 
 func TestMyInsert(t *testing.T) {
 
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	vl := make(AssRow)
 	vl["name"] = "toto"
 	vl["description"] = "tata"
+	vl["longitude"] = 1.38
+	vl["enddate"] = "2022-09-01"
+	vl["boolvalue"] = "true"
 
 	old, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
 	if err != nil {
@@ -94,7 +97,7 @@ func TestMyInsert(t *testing.T) {
 
 func TestMyUpdate(t *testing.T) {
 
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	vl := make(AssRow)
@@ -126,7 +129,7 @@ func TestMyUpdate(t *testing.T) {
 
 func TestMyDelete(t *testing.T) {
 
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	vl := make(AssRow)
@@ -155,7 +158,7 @@ func TestMyDelete(t *testing.T) {
 
 func TestMyDeleteColumn(t *testing.T) {
 
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
 	old, err := db.Table("test").GetSchema()
@@ -174,26 +177,26 @@ func TestMyDeleteColumn(t *testing.T) {
 }
 
 func TestMyDeleteTable(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	db.Table("test").DeleteTable()
 
 }
 
 func TestMyImportSchema(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	db.ImportSchema("pfn.json")
 }
 
 func TestMyClearImportSchema(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	db.ClearImportSchema("pfn.json")
 }
 
 func TestMyGetSchema(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true?charset=utf8mb4&collation=utf8mb4_unicode_ci")
 	defer db.Close()
 	data, err := db.GetSchema()
 	if err != nil {
@@ -204,7 +207,7 @@ func TestMyGetSchema(t *testing.T) {
 }
 
 func TestMySaveSchema(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	err := db.SaveSchema("schema.json")
 	if err != nil {
@@ -212,7 +215,7 @@ func TestMySaveSchema(t *testing.T) {
 	}
 }
 func TestMyGenerateTemplate(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	err := db.GenerateTemplate("plantuml.tmpl", "schema.puml")
 	if err != nil {
@@ -221,7 +224,7 @@ func TestMyGenerateTemplate(t *testing.T) {
 }
 
 func TestMyGenerateTableTemplate(t *testing.T) {
-	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
+	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 	err := db.GenerateTableTemplates("table.tmpl", "gen", "html")
 	if err != nil {

@@ -65,6 +65,9 @@ func TestPgInsert(t *testing.T) {
 	vl := make(AssRow)
 	vl["name"] = "toto"
 	vl["description"] = "tata"
+	vl["longitude"] = 1.38
+	vl["enddate"] = "2022-09-01"
+	vl["boolvalue"] = "true"
 
 	old, err := db.Table("test").GetAssociativeArray([]string{"*"}, "", []string{}, "")
 	if err != nil {

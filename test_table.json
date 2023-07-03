@@ -12,6 +12,7 @@
             "intvalue":"integer",
             "floatvalue":"float",
             "price":"float",
-            "testtype_id":"integer"
+            "testtype_id":"integer",
+            "boolvalue":"boolean"
         }
 }
