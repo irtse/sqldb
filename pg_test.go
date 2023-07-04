@@ -217,7 +217,7 @@ func TestPgSaveSchema(t *testing.T) {
 func TestPgGenerateTemplate(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
-	err := db.GenerateTemplate("plantuml.tmpl", "schema.puml")
+	err := db.GenerateSchemaTemplate("plantuml.tmpl", "schema.puml")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

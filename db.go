@@ -130,7 +130,7 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 							return nil, err
 						}
 						m[colName] = i
-					case "UNSIGNED BIGINT":
+					case "UNSIGNED BIGINT", "UNSIGNED INT":
 						u, err := strconv.ParseUint(fmt.Sprintf("%s", *val), 10, 64)
 						if err != nil {
 							return nil, err
@@ -615,7 +615,8 @@ func buildLinks(schema []TableInfo) []Link {
 	return links
 }
 
-func (db *Db) GenerateTemplate(templateFilename string, generatedFilename string) error {
+// Generate templates from a schema
+func (db *Db) GenerateSchemaTemplate(templateFilename string, generatedFilename string) error {
 	schema, err := db.GetSchema()
 	if err != nil {
 		log.Println(err)
@@ -648,6 +649,7 @@ func (db *Db) GenerateTemplate(templateFilename string, generatedFilename string
 	return nil
 }
 
+// Generate tables
 func (db *Db) GenerateTableTemplates(templateFilename string, outputFolder string, extension string) error {
 	schema, err := db.GetSchema()
 	if err != nil {
@@ -683,7 +685,7 @@ func FormatForSQL(datatype string, value interface{}) string {
 	if !strings.Contains(datatype, "char") && len(strval) == 0 {
 		return "NULL"
 	}
-	if strings.Contains(datatype, "char") || strings.Contains(datatype, "date") || strings.Contains(datatype, "timestamp") {
+	if strings.Contains(datatype, "char") || strings.Contains(datatype, "text") || strings.Contains(datatype, "date") || strings.Contains(datatype, "timestamp") {
 		return fmt.Sprint(pq.QuoteLiteral(strval))
 	}
 	return fmt.Sprint(strval)

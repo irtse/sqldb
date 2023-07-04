@@ -217,7 +217,7 @@ func TestMySaveSchema(t *testing.T) {
 func TestMyGenerateTemplate(t *testing.T) {
 	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
-	err := db.GenerateTemplate("plantuml.tmpl", "schema.puml")
+	err := db.GenerateSchemaTemplate("plantuml.tmpl", "schema.puml")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
