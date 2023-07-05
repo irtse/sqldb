@@ -484,7 +484,7 @@ func (t *TableInfo) Insert(record AssRow) (int, error) {
 		if err != nil {
 			return id, err
 		}
-		err = t.db.conn.QueryRow("LAST_INSERT_ID();").Scan(&id)
+		err = t.db.conn.QueryRow("SELECT LAST_INSERT_ID();").Scan(&id)
 	}
 	return id, err
 }
