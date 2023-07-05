@@ -462,7 +462,7 @@ func (t *TableInfo) buildSelect(key string, columns []string, restriction string
 	return query
 }
 
-func (t *TableInfo) Insert(record AssRow) (int, error) {
+func (t *TableInfo) Insert(record AssRow) (int64, error) {
 	columns := ""
 	values := ""
 	t, err := t.GetSchema()
@@ -470,7 +470,7 @@ func (t *TableInfo) Insert(record AssRow) (int, error) {
 		log.Println(err)
 		return -1, err
 	}
-	var id int
+	var id int64
 
 	for key, element := range record {
 		columns += key + ","
@@ -480,11 +480,17 @@ func (t *TableInfo) Insert(record AssRow) (int, error) {
 		err = t.db.conn.QueryRow("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id").Scan(&id)
 	}
 	if t.db.Driver == "mysql" {
-		_, err = t.db.conn.Query("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
+		/*		_, err = t.db.conn.Query("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
+				if err != nil {
+					return id, err
+				}
+				err = t.db.conn.QueryRow("SELECT LAST_INSERT_ID()").Scan(&id)*/
+		stmt, err := t.db.conn.Prepare("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
 		if err != nil {
 			return id, err
 		}
-		err = t.db.conn.QueryRow("SELECT LAST_INSERT_ID();").Scan(&id)
+		res, err := stmt.Exec()
+		id, err = res.LastInsertId()
 	}
 	return id, err
 }
@@ -542,12 +548,13 @@ func (t *TableInfo) Delete(record AssRow) error {
 	return nil
 }
 
-func (t *TableInfo) UpdateOrInsert(record AssRow) (int, error) {
-	id := -1
+func (t *TableInfo) UpdateOrInsert(record AssRow) (int64, error) {
+	var id int64
+	id = -1
 	for key, element := range record {
 		if key == "id" {
 			sid := fmt.Sprintf("%v", element)
-			id, _ = strconv.Atoi(sid)
+			id, _ = strconv.ParseInt(sid, 10, 64)
 			break
 		}
 	}
