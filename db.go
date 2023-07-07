@@ -697,3 +697,13 @@ func FormatForSQL(datatype string, value interface{}) string {
 	}
 	return fmt.Sprint(strval)
 }
+
+// Build a map based on id from a query result
+func (db *Db) BuildIdMap(idxkey string, rows Rows) (map[int64]AssRow, error) {
+	ht := make(map[int64]AssRow)
+	for _, row := range rows {
+		id := row[idxkey].(int64)
+		ht[id] = row
+	}
+	return ht, nil
+}
