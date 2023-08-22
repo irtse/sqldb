@@ -3,7 +3,6 @@ package sqldb
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -12,18 +11,12 @@ func TestMyCreateTable(t *testing.T) {
 	db := Open("mysql", "test:test@tcp(127.0.0.1:3306)/test?parseTime=true")
 	defer db.Close()
 
-	jsonFile, err := os.Open("test_table.json")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := os.ReadFile("test_table.json")
 
 	var jsonSource TableInfo
 	json.Unmarshal([]byte(byteValue), &jsonSource)
 
-	err = db.CreateTable(jsonSource)
+	err := db.CreateTable(jsonSource)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -88,10 +81,9 @@ func TestMyInsert(t *testing.T) {
 	if len(jsonStringOld) == len(jsonStringNew) {
 		t.Errorf("Error row not created")
 	}
-	jsonFile, err := os.Open("insert.json")
-	defer jsonFile.Close()
+
 	var result map[string]interface{}
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := os.ReadFile("insert.json")
 	json.Unmarshal(byteValue, &result)
 }
 

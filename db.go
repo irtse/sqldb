@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -402,16 +401,13 @@ func (t *TableInfo) DeleteColumn(name string) error {
 }
 
 func (db *Db) ImportSchema(filename string) {
-	jsonFile, err := os.Open(filename)
+	byteValue, _ := os.ReadFile(filename)
+
+	var jsonSource []TableInfo
+	err := json.Unmarshal([]byte(byteValue), &jsonSource)
 	if err != nil {
 		log.Println(err)
 	}
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	var jsonSource []TableInfo
-	json.Unmarshal([]byte(byteValue), &jsonSource)
 	for _, ti := range jsonSource {
 		ti.db = db
 		err = db.CreateTable(ti)
@@ -422,19 +418,13 @@ func (db *Db) ImportSchema(filename string) {
 }
 
 func (db *Db) ClearImportSchema(filename string) {
-	jsonFile, err := os.Open(filename)
-	if err != nil {
-		log.Println(err)
-	}
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := os.ReadFile(filename)
 
 	var jsonSource []TableInfo
 	json.Unmarshal([]byte(byteValue), &jsonSource)
 	for _, ti := range jsonSource {
 		ti.db = db
-		err = ti.DeleteTable()
+		err := ti.DeleteTable()
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -600,7 +590,7 @@ func (db *Db) SaveSchema(generatedFilename string) error {
 	}
 	//	file, _ := json.Marshal(schema)
 	file, _ := json.MarshalIndent(schema, "", " ")
-	_ = ioutil.WriteFile(generatedFilename, file, 0644)
+	_ = os.WriteFile(generatedFilename, file, 0644)
 	return nil
 }
 
