@@ -476,11 +476,18 @@ func (t *TableInfo) Insert(record AssRow) (int64, error) {
 				}
 				err = t.db.conn.QueryRow("SELECT LAST_INSERT_ID()").Scan(&id)*/
 		stmt, err := t.db.conn.Prepare("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
+		fmt.Println("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
 		if err != nil {
 			return id, err
 		}
 		res, err := stmt.Exec()
+		if err != nil {
+			return id, err
+		}
 		id, err = res.LastInsertId()
+		if err != nil {
+			return id, err
+		}
 	}
 	return id, err
 }
