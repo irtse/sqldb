@@ -152,7 +152,7 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 							m[colName] = false
 						}
 
-					case "VARCHAR", "TEXT", "TIMESTAMP":
+					case "VARCHAR", "TEXT", "TIMESTAMP", "VARBINARY":
 						m[colName] = fmt.Sprintf("%s", *val)
 					default:
 						if reflect.ValueOf(val).IsNil() {
