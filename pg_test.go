@@ -11,7 +11,7 @@ func TestPgCreateTable(t *testing.T) {
 	db := Open("postgres", "host=127.0.0.1 port=5432 user=test password=test dbname=test sslmode=disable")
 	defer db.Close()
 
-	byteValue, _ := os.ReadFile("test_table.json")
+	byteValue, _ := os.ReadFile("testtype_table.json")
 
 	var jsonSource TableInfo
 	json.Unmarshal([]byte(byteValue), &jsonSource)

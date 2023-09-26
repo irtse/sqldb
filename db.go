@@ -158,7 +158,7 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 						if reflect.ValueOf(val).IsNil() {
 							m[colName] = nil
 						} else {
-							fmt.Printf("Unknow type : %s", columnType[colName])
+							fmt.Printf("Unknow type : %s (%s)\n", columnType[colName], query)
 							m[colName] = fmt.Sprintf("%v", *val)
 						}
 					}
