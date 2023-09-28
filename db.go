@@ -17,9 +17,10 @@ import (
 )
 
 type Db struct {
-	Driver string
-	Url    string
-	conn   *sql.DB
+	Driver     string
+	Url        string
+	LogQueries bool
+	conn       *sql.DB
 }
 
 // AssRow : associative row type
