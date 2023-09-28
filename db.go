@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -14,7 +13,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
+	"github.com/rs/zerolog"
 )
+
+var log zerolog.Logger
 
 type Db struct {
 	Driver     string
@@ -49,7 +51,7 @@ func Open(driver string, url string) *Db {
 	database.Url = url
 	database.conn, err = sql.Open(driver, url)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 	}
 	return &database
 }
@@ -73,10 +75,13 @@ func (t *TableInfo) GetAssociativeArray(columns []string, restriction string, so
 
 // QueryAssociativeArray : Provide query result as an associative array
 func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
+	if db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := db.conn.Query(query)
 	if err != nil {
-		log.Println(err)
-		log.Println(query)
+		log.Error().Msg(err.Error())
+		log.Error().Msg(query)
 		return nil, err
 	}
 	defer rows.Close()
@@ -84,8 +89,8 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 	results := Rows{}
 	cols, err := rows.Columns()
 	if err != nil {
-		log.Println(err)
-		log.Println(query)
+		log.Error().Msg(err.Error())
+		log.Error().Msg(query)
 		return nil, err
 	}
 	// make types map
@@ -191,7 +196,7 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	}
 	cols, err := t.db.QueryAssociativeArray(schemaQuery)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return nil, err
 	}
 	ti.Columns = make(map[string]string)
@@ -221,7 +226,7 @@ func (db *Db) GetSchema() ([]TableInfo, error) {
 	var res []TableInfo
 	tables, err := db.ListTables()
 	if err != nil {
-		log.Println(err.Error())
+		log.Error().Msg(err.Error())
 		return nil, err
 	}
 	for _, row := range tables {
@@ -232,7 +237,7 @@ func (db *Db) GetSchema() ([]TableInfo, error) {
 			ti.db = db
 			fullti, err = ti.GetSchema()
 			if err != nil {
-				log.Println(err.Error())
+				log.Error().Msg(err.Error())
 				return nil, err
 			}
 			res = append(res, *fullti)
@@ -285,18 +290,24 @@ func (db *Db) pgCreateTable(t TableInfo) error {
 	}
 	query += columns
 	query = query[:len(query)-1] + " )"
+	if db.LogQueries {
+		log.Info().Msg(query)
+	}
 	_, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err.Error())
+		log.Error().Msg(err.Error())
 		return err
 	}
 	for name, rowtype := range t.Columns {
 		desc := strings.Split(fmt.Sprintf("%v", rowtype), "|")
 		if len(desc) > 1 {
 			query = "COMMENT ON COLUMN " + t.Name + "." + fmt.Sprintf("%v", name) + " IS '" + desc[1] + "'"
+			if db.LogQueries {
+				log.Info().Msg(query)
+			}
 			_, err := t.db.conn.Query(query)
 			if err != nil {
-				log.Println(err.Error())
+				log.Error().Msg(err.Error())
 				return err
 			}
 		}
@@ -323,9 +334,12 @@ func (db *Db) myCreateTable(t TableInfo) error {
 	}
 	query += columns
 	query = query[:len(query)-1] + " )"
+	if db.LogQueries {
+		log.Info().Msg(query)
+	}
 	_, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err.Error())
+		log.Error().Msg(err.Error())
 		return err
 	}
 	return nil
@@ -333,15 +347,21 @@ func (db *Db) myCreateTable(t TableInfo) error {
 
 func (t *TableInfo) DeleteTable() error {
 	query := "drop table " + t.Name
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	_, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err.Error())
+		log.Error().Msg(err.Error())
 		return err
 	}
 	query = "drop sequence if exists sq_" + t.Name
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	_, err = t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err.Error())
+		log.Error().Msg(err.Error())
 		return err
 	}
 	return nil
@@ -359,16 +379,22 @@ func (t *TableInfo) AddColumn(name string, sqltype string, comment string) error
 
 func (t *TableInfo) pgAddColumn(name string, sqltype string, comment string) error {
 	query := "alter table " + t.Name + " add " + name + " " + sqltype
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	if strings.TrimSpace(comment) != "" {
 		query = "COMMENT ON COLUMN " + t.Name + "." + name + " IS '" + comment + "'"
+		if t.db.LogQueries {
+			log.Info().Msg(query)
+		}
 		_, err = t.db.conn.Query(query)
 		if err != nil {
-			log.Println(err.Error())
+			log.Error().Msg(err.Error())
 			return err
 		}
 	}
@@ -381,9 +407,12 @@ func (t *TableInfo) myAddColumn(name string, sqltype string, comment string) err
 	if strings.TrimSpace(comment) != "" {
 		query += " COMMENT " + pq.QuoteLiteral(comment)
 	}
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	defer rows.Close()
@@ -392,9 +421,12 @@ func (t *TableInfo) myAddColumn(name string, sqltype string, comment string) err
 
 func (t *TableInfo) DeleteColumn(name string) error {
 	query := "alter table " + t.Name + " drop " + name
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	defer rows.Close()
@@ -407,13 +439,13 @@ func (db *Db) ImportSchema(filename string) {
 	var jsonSource []TableInfo
 	err := json.Unmarshal([]byte(byteValue), &jsonSource)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 	}
 	for _, ti := range jsonSource {
 		ti.db = db
 		err = db.CreateTable(ti)
 		if err != nil {
-			log.Println(err.Error())
+			log.Error().Msg(err.Error())
 		}
 	}
 }
@@ -427,7 +459,7 @@ func (db *Db) ClearImportSchema(filename string) {
 		ti.db = db
 		err := ti.DeleteTable()
 		if err != nil {
-			log.Println(err.Error())
+			log.Error().Msg(err.Error())
 		}
 	}
 }
@@ -458,7 +490,7 @@ func (t *TableInfo) Insert(record AssRow) (int64, error) {
 	values := ""
 	t, err := t.GetSchema()
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return -1, err
 	}
 	var id int64
@@ -468,7 +500,11 @@ func (t *TableInfo) Insert(record AssRow) (int64, error) {
 		values += FormatForSQL(t.Columns[key], element) + ","
 	}
 	if t.db.Driver == "postgres" {
-		err = t.db.conn.QueryRow("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id").Scan(&id)
+		query := "INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ") RETURNING id"
+		if t.db.LogQueries {
+			log.Info().Msg(query)
+		}
+		err = t.db.conn.QueryRow(query).Scan(&id)
 	}
 	if t.db.Driver == "mysql" {
 		/*		_, err = t.db.conn.Query("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
@@ -476,7 +512,12 @@ func (t *TableInfo) Insert(record AssRow) (int64, error) {
 					return id, err
 				}
 				err = t.db.conn.QueryRow("SELECT LAST_INSERT_ID()").Scan(&id)*/
-		stmt, err := t.db.conn.Prepare("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
+
+		query := "INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")"
+		stmt, err := t.db.conn.Prepare(query)
+		if t.db.LogQueries {
+			log.Info().Msg(query)
+		}
 		fmt.Println("INSERT INTO " + t.Name + "(" + removeLastChar(columns) + ") VALUES (" + removeLastChar(values) + ")")
 		if err != nil {
 			return id, err
@@ -497,7 +538,7 @@ func (t *TableInfo) Update(record AssRow) error {
 
 	t, err := t.GetSchema()
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	id := ""
@@ -514,10 +555,13 @@ func (t *TableInfo) Update(record AssRow) error {
 	}
 	stack = removeLastChar(stack)
 	query := ("UPDATE " + t.Name + " SET " + stack + " WHERE id = " + id)
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(query)
-		log.Println(err)
+		log.Error().Msg(query)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	defer rows.Close()
@@ -536,10 +580,13 @@ func (t *TableInfo) Delete(record AssRow) error {
 		}
 	}
 	query := ("DELETE FROM " + t.Name + " WHERE id = " + id)
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
 	rows, err := t.db.conn.Query(query)
 	if err != nil {
-		log.Println(query)
-		log.Println(err)
+		log.Error().Msg(query)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	defer rows.Close()
@@ -593,7 +640,7 @@ func Quote(str string) string {
 func (db *Db) SaveSchema(generatedFilename string) error {
 	schema, err := db.GetSchema()
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	//	file, _ := json.Marshal(schema)
@@ -624,7 +671,7 @@ func buildLinks(schema []TableInfo) []Link {
 func (db *Db) GenerateSchemaTemplate(templateFilename string, generatedFilename string) error {
 	schema, err := db.GetSchema()
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	links := buildLinks(schema)
@@ -638,17 +685,17 @@ func (db *Db) GenerateSchemaTemplate(templateFilename string, generatedFilename 
 
 	t, err := template.ParseFiles(templateFilename)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	f, err := os.Create(generatedFilename)
 	if err != nil {
-		log.Println("create file: ", err)
+		log.Error().Msg("create file: " + err.Error())
 		return err
 	}
 	err = t.Execute(f, data)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	return nil
@@ -658,24 +705,24 @@ func (db *Db) GenerateSchemaTemplate(templateFilename string, generatedFilename 
 func (db *Db) GenerateTableTemplates(templateFilename string, outputFolder string, extension string) error {
 	schema, err := db.GetSchema()
 	if err != nil {
-		log.Println(err)
+		log.Error().Msg(err.Error())
 		return err
 	}
 	for _, ti := range schema {
 
 		t, err := template.ParseFiles(templateFilename)
 		if err != nil {
-			log.Println(err)
+			log.Error().Msg(err.Error())
 			return err
 		}
 		f, err := os.Create(outputFolder + string(os.PathSeparator) + ti.Name + "." + extension)
 		if err != nil {
-			log.Println("create file: ", err)
+			log.Error().Msg("create file: " + err.Error())
 			return err
 		}
 		err = t.Execute(f, ti)
 		if err != nil {
-			log.Println(err)
+			log.Error().Msg(err.Error())
 			return err
 		}
 	}
