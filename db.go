@@ -593,6 +593,21 @@ func (t *TableInfo) Delete(record AssRow) error {
 	return nil
 }
 
+func (t *TableInfo) WildDelete(restriction string) error {
+	query := ("DELETE FROM " + t.Name + " WHERE " + restriction)
+	if t.db.LogQueries {
+		log.Info().Msg(query)
+	}
+	rows, err := t.db.conn.Query(query)
+	if err != nil {
+		log.Error().Msg(query)
+		log.Error().Msg(err.Error())
+		return err
+	}
+	defer rows.Close()
+	return nil
+}
+
 func (t *TableInfo) UpdateOrInsert(record AssRow) (int64, error) {
 	var id int64
 	id = -1
