@@ -1,4 +1,4 @@
-module forge.redroom.link/yves/sqldb
+module github.com/irtse/sqldb
 
 go 1.17
 
