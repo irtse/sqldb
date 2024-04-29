@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/lib/pq"
+	_ "github.com/microsoft/go-mssqldb"
 	"github.com/rs/zerolog"
 )
 
@@ -170,10 +171,9 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 					}
 				}
 			}
-			if db.Driver == "postgres" {
+			if db.Driver == "postgres" || db.Driver == "sqlserver" {
 				m[colName] = *val
 			}
-
 		}
 		results = append(results, m)
 	}
@@ -184,6 +184,9 @@ func (db *Db) QueryAssociativeArray(query string) (Rows, error) {
 func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	pgSchema := "SELECT column_name :: varchar as name, REPLACE(REPLACE(data_type,'character varying','varchar'),'character','char') || COALESCE('(' || character_maximum_length || ')', '') as type, col_description('public." + t.Name + "'::regclass, ordinal_position) as comment  from INFORMATION_SCHEMA.COLUMNS where table_name ='" + t.Name + "';"
 	mySchema := "SELECT COLUMN_NAME as name, CONCAT(DATA_TYPE, COALESCE(CONCAT('(' , CHARACTER_MAXIMUM_LENGTH, ')'), '')) as type FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + t.Name + "';"
+	// nob
+	msSchema := "SELECT COLUMN_NAME as name, CONCAT(DATA_TYPE, COALESCE(CONCAT('(' , CHARACTER_MAXIMUM_LENGTH, ')'), '')) as type FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + t.Name + "';"
+
 	var schemaQuery string
 	var ti TableInfo
 	ti.Name = t.Name
@@ -193,6 +196,10 @@ func (t *TableInfo) GetSchema() (*TableInfo, error) {
 	}
 	if t.db.Driver == "mysql" {
 		schemaQuery = mySchema
+	}
+	// nob requête identique
+	if t.db.Driver == "sqlserver" {
+		schemaQuery = msSchema
 	}
 	cols, err := t.db.QueryAssociativeArray(schemaQuery)
 	if err != nil {
@@ -254,6 +261,10 @@ func (db *Db) ListTables() (Rows, error) {
 	if db.Driver == "mysql" {
 		return db.myListTables()
 	}
+	// nob requête identique
+	if db.Driver == "sqlserver" {
+		return db.msListTables()
+	}
 	return nil, errors.New("no driver")
 }
 
@@ -265,11 +276,20 @@ func (db *Db) myListTables() (Rows, error) {
 	return db.QueryAssociativeArray("SELECT TABLE_NAME as name FROM information_schema.TABLES WHERE TABLE_TYPE LIKE 'BASE_TABLE';")
 }
 
+// nob identical request
+func (db *Db) msListTables() (Rows, error) {
+	return db.QueryAssociativeArray("SELECT TABLE_NAME as name FROM information_schema.TABLES WHERE TABLE_TYPE LIKE 'BASE_TABLE';")
+}
+
 func (db *Db) CreateTable(t TableInfo) error {
 	if db.Driver == "postgres" {
 		return db.pgCreateTable(t)
 	}
 	if db.Driver == "mysql" {
+		return db.myCreateTable(t)
+	}
+	// nob requête identique
+	if db.Driver == "sqlserver" {
 		return db.myCreateTable(t)
 	}
 	return errors.New("no driver")
